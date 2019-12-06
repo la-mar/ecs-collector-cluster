@@ -45,7 +45,7 @@ resource "aws_spot_fleet_request" "main" {
       vpc_security_group_ids = [aws_security_group.ecs_instance.id]
       iam_instance_profile   = aws_iam_instance_profile.ecs.name
       key_name               = var.key_name
-      tags                   = merge(local.tags, { Name = local.full_service_name })
+      tags                   = merge(local.tags, { Name = var.service_name })
 
       root_block_device {
         volume_type = "gp2"
