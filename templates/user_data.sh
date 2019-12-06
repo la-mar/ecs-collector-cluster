@@ -1,3 +1,4 @@
+#cloud-boothook
 #!/bin/bash
 /root/.deploy.sh
 
@@ -13,8 +14,23 @@ ECS_CLUSTER=${cluster_name}
 ECS_UPDATES_ENABLED=true
 EOF
 
-cloud-init-per once docker_options echo 'OPTIONS="$${OPTIONS} --storage-opt dm.basesize=40G"' >> /etc/sysconfig/docker
+cloud-init-per once docker_options sed -i '/^OPTIONS/s/"$/ --storage-opt dm.basesize=40G"/' /etc/sysconfig/docker
 
+# echo 'OPTIONS="$${OPTIONS} --storage-opt dm.basesize=40G"' | tee /etc/sysconfig/docker
+
+# echo " # The max number of open files for the daemon itself, and all
+# # running containers.  The default value of 1048576 mirrors the value
+# # used by the systemd service unit.
+# DAEMON_MAXFILES=1048576
+
+# # Additional startup options for the Docker daemon, for example:
+# # OPTIONS="--ip-forward=true --iptables=true"
+# # By default we limit the number of open files per container
+# OPTIONS="--storage-opt dm.basesize=40G"
+
+# # How many seconds the sysvinit script waits for the pidfile to appear
+# # when starting the daemon.
+# DAEMON_PIDFILE_TIMEOUT=10" | tee /etc/sysconfig/docker
 # yum update -y
 # yum install -y awslogs jq
 
