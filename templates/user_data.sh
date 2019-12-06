@@ -13,8 +13,7 @@ ECS_CLUSTER=${cluster_name}
 ECS_UPDATES_ENABLED=true
 EOF
 
-cloud-init-per once docker_options echo 'OPTIONS="${OPTIONS} --storage-opt dm.basesize=40G"' >> /etc/sysconfig/docker
-echo ECS_CLUSTER=yourclustername >> /etc/ecs/ecs.config
+cloud-init-per once docker_options echo 'OPTIONS="$${OPTIONS} --storage-opt dm.basesize=40G"' >> /etc/sysconfig/docker
 
 # yum update -y
 # yum install -y awslogs jq
