@@ -1,13 +1,4 @@
-### Custom User Data ###
 
-# %% user data for instance bootstrapping
-data "template_file" "user_data" {
-  template = file("templates/user_data.sh")
-
-  vars = {
-    cluster_name = aws_ecs_cluster.main.name # must match name of ecs cluster
-  }
-}
 
 # %% ECS Optimized AMI
 data "aws_ami" "latest_ecs" {
