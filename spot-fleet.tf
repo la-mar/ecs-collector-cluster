@@ -16,6 +16,40 @@ data "aws_ami" "latest_ecs" {
   }
 }
 
+resource "aws_appautoscaling_target" "spot_fleet_target" {
+  min_capacity = var.asg_min_capacity
+  max_capacity = var.asg_max_capacity
+  resource_id  = "spot-fleet-request/${aws_spot_fleet_request.main.id}"
+  # role_arn           = var.ecs_iam_role
+  scalable_dimension = "ec2:spot-fleet-request:TargetCapacity"
+  service_namespace  = "ec2"
+}
+
+resource "aws_appautoscaling_policy" "ecs_policy" {
+  name               = "${var.service_name}-autoscale"
+  policy_type        = "StepScaling"
+  resource_id        = aws_appautoscaling_target.spot_fleet_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.spot_fleet_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.spot_fleet_target.service_namespace
+
+  step_scaling_policy_configuration {
+    adjustment_type         = "ChangeInCapacity"
+    cooldown                = 60
+    metric_aggregation_type = "Average"
+
+    step_adjustment {
+      metric_interval_lower_bound = 1.0
+      metric_interval_upper_bound = 2.0
+      scaling_adjustment          = -1
+    }
+
+    step_adjustment {
+      metric_interval_lower_bound = 2.0
+      metric_interval_upper_bound = 3.0
+      scaling_adjustment          = 1
+    }
+  }
+}
 
 
 ### Spot Fleet Request ###
@@ -35,6 +69,8 @@ resource "aws_spot_fleet_request" "main" {
 
   depends_on = [aws_iam_role.fleet, aws_iam_role_policy_attachment.fleet]
 
+
+
   dynamic "launch_specification" {
     for_each = var.instance_types
 
@@ -53,7 +89,7 @@ resource "aws_spot_fleet_request" "main" {
       }
 
       ebs_block_device {
-        # override the size of the volume that is automatically attached by ECS for docker storage
+        # docker
         device_name = "/dev/xvdcz"
         volume_type = "gp2"
         volume_size = var.docker_volume_size
@@ -67,7 +103,7 @@ resource "aws_spot_fleet_request" "main" {
 
 ### Security ###
 
-data "aws_iam_policy_document" "fleet" {
+data "aws_iam_policy_document" "fleet_assume_role" {
   statement {
     sid     = ""
     effect  = "Allow"
@@ -85,28 +121,26 @@ data "aws_iam_policy_document" "fleet" {
 
 resource "aws_iam_role" "fleet" {
   name               = "${local.full_service_name}-fleet"
-  assume_role_policy = data.aws_iam_policy_document.fleet.json
+  assume_role_policy = data.aws_iam_policy_document.fleet_assume_role.json
   tags               = local.tags
 }
+
+data "aws_iam_policy_document" "describe_ec2" {
+
+  statement {
+    sid       = ""
+    effect    = "Allow"
+    actions   = ["ec2.Describe*"]
+    resources = ["*"]
+  }
+}
+
 
 resource "aws_iam_policy" "fleet" {
   name        = "${local.full_service_name}-fleet"
   description = "Fleet Policy Attachment"
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+  policy = data.aws_iam_policy_document.describe_ec2.json
 }
 
 resource "aws_iam_role_policy_attachment" "fleet" {

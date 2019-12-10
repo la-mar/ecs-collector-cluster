@@ -3,6 +3,10 @@
 resource "aws_ecs_cluster" "main" {
   name = var.service_name
   tags = local.tags
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 
@@ -22,9 +26,12 @@ resource "aws_ecs_service" "datadog" {
       desired_count,
       task_definition,
 
+
     ]
   }
 }
+
+
 
 ### Task Definitions ###
 
@@ -106,7 +113,8 @@ data "aws_iam_policy_document" "ecs_instance" {
       type = "Service"
       identifiers = [
         "ec2.amazonaws.com",
-        "sqs.amazonaws.com"
+        "sqs.amazonaws.com",
+
       ]
     }
   }

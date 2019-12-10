@@ -33,14 +33,14 @@ variable "docker_volume_size" {
   default     = 50
 }
 
-variable "max_size" {
-  default     = 3
-  description = "Maximum size of the nodes in the cluster"
-}
-
-variable "min_size" {
+variable "asg_min_capacity" {
   default     = 1
   description = "Minimum size of the nodes in the cluster"
+}
+
+variable "asg_max_capacity" {
+  default     = 3
+  description = "Maximum size of the nodes in the cluster"
 }
 
 variable "desired_capacity" {
