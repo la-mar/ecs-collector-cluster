@@ -47,7 +47,7 @@ resource "aws_appautoscaling_policy" "ecs_cluster_autoscale_out" {
 
     step_adjustment {
       // scale up
-      metric_interval_lower_bound = 2.0
+      metric_interval_lower_bound = 1.0
       # metric_interval_upper_bound = 3.0
       scaling_adjustment = 1
     }
@@ -73,7 +73,7 @@ resource "aws_appautoscaling_policy" "ecs_cluster_autoscale_out" {
   #   scale_out_cooldown = "60"  # seconds
   # }
 
-  depends_on = [aws_appautoscaling_target.spot_fleet_target]
+  depends_on = [aws_appautoscaling_target.spot_fleet_target, aws_cloudwatch_metric_alarm.service_cpu_scale_up]
 
 }
 
@@ -93,8 +93,8 @@ resource "aws_appautoscaling_policy" "ecs_cluster_autoscale_in" {
     step_adjustment {
       // scale down
       metric_interval_lower_bound = 1.0
-      metric_interval_upper_bound = 2.0
-      scaling_adjustment          = -1
+      # metric_interval_upper_bound = 2.0
+      scaling_adjustment = -1
     }
 
     # step_adjustment {
@@ -105,7 +105,7 @@ resource "aws_appautoscaling_policy" "ecs_cluster_autoscale_in" {
     # }
   }
 
-  depends_on = [aws_appautoscaling_target.spot_fleet_target]
+  depends_on = [aws_appautoscaling_target.spot_fleet_target, aws_cloudwatch_metric_alarm.service_cpu_scale_up]
 
 }
 
