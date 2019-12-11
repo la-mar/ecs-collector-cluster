@@ -105,7 +105,7 @@ resource "aws_spot_fleet_request" "main" {
       ami           = data.aws_ami.latest_ecs.id
       instance_type = launch_specification.value
       # subnet_id              = random_shuffle.subnets.result
-      subnet_id              = random_shuffle.subnets.result
+      subnet_id              = data.terraform_remote_state.vpc.outputs.private_subnets[0]
       vpc_security_group_ids = [aws_security_group.ecs_instance.id]
       iam_instance_profile   = aws_iam_instance_profile.ecs.name
       key_name               = var.key_name
