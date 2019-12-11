@@ -73,7 +73,7 @@ resource "aws_appautoscaling_policy" "ecs_cluster_autoscale_out" {
   #   scale_out_cooldown = "60"  # seconds
   # }
 
-  depends_on = [aws_appautoscaling_target.spot_fleet_target, aws_cloudwatch_metric_alarm.service_cpu_scale_up]
+  depends_on = [aws_appautoscaling_target.spot_fleet_target]
 
 }
 
@@ -105,7 +105,7 @@ resource "aws_appautoscaling_policy" "ecs_cluster_autoscale_in" {
     # }
   }
 
-  depends_on = [aws_appautoscaling_target.spot_fleet_target, aws_cloudwatch_metric_alarm.service_cpu_scale_up]
+  depends_on = [aws_appautoscaling_target.spot_fleet_target]
 
 }
 
