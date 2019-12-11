@@ -115,7 +115,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_res_high" {
   statistic           = "Maximum"
   threshold           = "90"
 
-  dimensions {
+  dimensions = {
     ClusterName = aws_ecs_cluster.main.name
   }
 
@@ -141,7 +141,7 @@ resource "aws_cloudwatch_metric_alarm" "memory_res_high" {
   statistic           = "Maximum"
   threshold           = "90"
 
-  dimensions {
+  dimensions = {
     ClusterName = aws_ecs_cluster.main.name
   }
 
@@ -167,7 +167,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_res_low" {
   statistic           = "Maximum"
   threshold           = "10"
 
-  dimensions {
+  dimensions = {
     ClusterName = aws_ecs_cluster.main.name
   }
 
@@ -193,7 +193,7 @@ resource "aws_cloudwatch_metric_alarm" "memory_res_low" {
   statistic           = "Maximum"
   threshold           = "10"
 
-  dimensions {
+  dimensions = {
     ClusterName = aws_ecs_cluster.main.name
   }
 
