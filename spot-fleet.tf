@@ -74,6 +74,10 @@ resource "aws_cloudwatch_metric_alarm" "service_cpu_scale_down" {
   alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscaling.arn]
 }
 
+resource "random_shuffle" "subnets" {
+  input        = data.terraform_remote_state.vpc.outputs.private_subnets[*]
+  result_count = 1
+}
 
 ### Spot Fleet Request ###
 resource "aws_spot_fleet_request" "main" {
@@ -100,7 +104,7 @@ resource "aws_spot_fleet_request" "main" {
     content {
       ami                    = data.aws_ami.latest_ecs.id
       instance_type          = launch_specification.value
-      subnet_id              = data.terraform_remote_state.vpc.outputs.private_subnets[0]
+      subnet_id              = random_shuffle.subnets.result
       vpc_security_group_ids = [aws_security_group.ecs_instance.id]
       iam_instance_profile   = aws_iam_instance_profile.ecs.name
       key_name               = var.key_name
@@ -162,8 +166,22 @@ data "aws_iam_policy_document" "describe_ec2" {
 resource "aws_iam_policy" "fleet" {
   name        = "${local.full_service_name}-fleet"
   description = "Fleet Policy Attachment"
+  policy      = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
 
-  policy = data.aws_iam_policy_document.describe_ec2.json
+  # policy = data.aws_iam_policy_document.describe_ec2.json
 }
 
 resource "aws_iam_role_policy_attachment" "fleet" {
