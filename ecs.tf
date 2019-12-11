@@ -127,3 +127,63 @@ resource "aws_iam_role" "ecs_instance" {
   tags               = local.tags
 }
 
+
+### Capacity Provider ###
+
+# resource "aws_launch_configuration" "main" {
+#   name_prefix = "${format("%s-", var.name)}"
+
+#   image_id                    = "${var.image_id}"
+#   instance_type               = "${var.instance_type}"
+#   ebs_optimized               = "${var.instance_ebs_optimized}"
+#   iam_instance_profile        = "${var.iam_instance_profile}"
+#   key_name                    = "${var.key_name}"
+#   security_groups             = ["${aws_security_group.cluster.id}"]
+#   user_data                   = "${data.template_cloudinit_config.cloud_config.rendered}"
+#   associate_public_ip_address = "${var.associate_public_ip_address}"
+
+#   # root
+#   root_block_device {
+#     volume_type = "gp2"
+#     volume_size = "${var.root_volume_size}"
+#   }
+
+#   # docker
+#   ebs_block_device {
+#     device_name = "/dev/xvdcz"
+#     volume_type = "gp2"
+#     volume_size = "${var.docker_volume_size}"
+#   }
+
+#   lifecycle {
+#     create_before_destroy = true
+#   }
+# }
+
+# resource "aws_autoscaling_group" "main" {
+#   name = "${var.name}"
+
+#   availability_zones   = ["${var.availability_zones}"]
+#   vpc_zone_identifier  = ["${var.subnet_ids}"]
+#   launch_configuration = "${aws_launch_configuration.main.id}"
+#   min_size             = "${var.min_size}"
+#   max_size             = "${var.max_size}"
+#   desired_capacity     = "${var.desired_capacity}"
+#   termination_policies = ["OldestLaunchConfiguration", "Default"]
+
+#   dynamic "tag" {
+#     for_each = merge(local.tags, { Name = var.service_name })
+
+#     key                 = tag.key
+#     value               = tag.value
+#     propagate_at_launch = true
+
+#   }
+
+
+
+#   lifecycle {
+#     create_before_destroy = true
+#   }
+# }
+

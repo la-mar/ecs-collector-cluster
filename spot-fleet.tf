@@ -21,6 +21,11 @@ resource "random_shuffle" "subnets" {
   result_count = 1
 }
 
+resource "random_shuffle" "subnets2" {
+  input        = data.terraform_remote_state.vpc.outputs.private_subnets
+  result_count = 1
+}
+
 output "shuffle" {
   value = random_shuffle.subnets.result[0]
 }
