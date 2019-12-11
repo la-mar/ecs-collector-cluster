@@ -32,45 +32,59 @@ resource "aws_appautoscaling_policy" "ecs_cluster_autoscaling" {
   scalable_dimension = aws_appautoscaling_target.spot_fleet_target.scalable_dimension
   service_namespace  = aws_appautoscaling_target.spot_fleet_target.service_namespace
 
-  # step_scaling_policy_configuration {
-  #   adjustment_type         = "ChangeInCapacity"
-  #   cooldown                = 60
-  #   metric_aggregation_type = "Average"
+  customized_metric_specification {
+    namespace   = "AWS/ECS"
+    metric_name = "CPUUtilization"
+    statistic   = "Average"
+    unit        = "Percent"
 
-  #   step_adjustment {
-  #     // scale down
-  #     metric_interval_lower_bound = 1.0
-  #     metric_interval_upper_bound = 2.0
-  #     scaling_adjustment          = -1
-  #   }
-
-  #   step_adjustment {
-  #     // scale up
-  #     metric_interval_lower_bound = 2.0
-  #     # metric_interval_upper_bound = 3.0
-  #     scaling_adjustment = 1
-  #   }
-  # }
-
-
-  target_tracking_scaling_policy_configuration {
-    customized_metric_specification {
-      namespace   = "AWS/ECS"
-      metric_name = "CPUUtilization"
-      statistic   = "Average"
-      unit        = "Percent"
-
-      dimensions {
-        name  = "ClusterName"
-        value = aws_ecs_cluster.main.name
-      }
-
+    dimensions {
+      name  = "ClusterName"
+      value = aws_ecs_cluster.main.name
     }
 
-    target_value       = "90"
-    scale_in_cooldown  = "300" # seconds
-    scale_out_cooldown = "60"  # seconds
   }
+
+  step_scaling_policy_configuration {
+    adjustment_type         = "ChangeInCapacity"
+    cooldown                = 60
+    metric_aggregation_type = "Average"
+
+
+    step_adjustment {
+      // scale down
+      metric_interval_lower_bound = 1.0
+      metric_interval_upper_bound = 2.0
+      scaling_adjustment          = -1
+    }
+
+    step_adjustment {
+      // scale up
+      metric_interval_lower_bound = 2.0
+      # metric_interval_upper_bound = 3.0
+      scaling_adjustment = 1
+    }
+  }
+
+
+  # target_tracking_scaling_policy_configuration {
+  #   customized_metric_specification {
+  #     namespace   = "AWS/ECS"
+  #     metric_name = "CPUUtilization"
+  #     statistic   = "Average"
+  #     unit        = "Percent"
+
+  #     dimensions {
+  #       name  = "ClusterName"
+  #       value = aws_ecs_cluster.main.name
+  #     }
+
+  #   }
+
+  #   target_value       = "90"
+  #   scale_in_cooldown  = "300" # seconds
+  #   scale_out_cooldown = "60"  # seconds
+  # }
 
   depends_on = [aws_appautoscaling_target.spot_fleet_target]
 
