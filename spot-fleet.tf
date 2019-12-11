@@ -27,52 +27,90 @@ resource "aws_appautoscaling_target" "spot_fleet_target" {
 
 resource "aws_appautoscaling_policy" "ecs_cluster_autoscaling" {
   name               = "${var.service_name}-autoscale"
-  policy_type        = "StepScaling" #  "TargetTrackingScaling"
+  policy_type        = "TargetTrackingScaling" # "StepScaling" #  "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.spot_fleet_target.resource_id
   scalable_dimension = aws_appautoscaling_target.spot_fleet_target.scalable_dimension
   service_namespace  = aws_appautoscaling_target.spot_fleet_target.service_namespace
 
-  step_scaling_policy_configuration {
-    adjustment_type         = "ChangeInCapacity"
-    cooldown                = 60
-    metric_aggregation_type = "Average"
+  # step_scaling_policy_configuration {
+  #   adjustment_type         = "ChangeInCapacity"
+  #   cooldown                = 60
+  #   metric_aggregation_type = "Average"
 
-    step_adjustment {
-      // scale down
-      metric_interval_lower_bound = 1.0
-      metric_interval_upper_bound = 2.0
-      scaling_adjustment          = -1
+  #   step_adjustment {
+  #     // scale down
+  #     metric_interval_lower_bound = 1.0
+  #     metric_interval_upper_bound = 2.0
+  #     scaling_adjustment          = -1
+  #   }
+
+  #   step_adjustment {
+  #     // scale up
+  #     metric_interval_lower_bound = 2.0
+  #     # metric_interval_upper_bound = 3.0
+  #     scaling_adjustment = 1
+  #   }
+  # }
+
+
+  target_tracking_scaling_policy_configuration {
+    customized_metric_specification {
+      namespace   = "AWS/ECS"
+      metric_name = "CPUUtilization"
+      statistic   = "Average"
+      unit        = "Percent"
+
+      dimensions {
+        name  = "ClusterName"
+        value = aws_ecs_cluster.main.name
+      }
+
     }
 
-    step_adjustment {
-      // scale up
-      metric_interval_lower_bound = 2.0
-      # metric_interval_upper_bound = 3.0
-      scaling_adjustment = 1
-    }
+    target_value       = "90"
+    scale_in_cooldown  = "300" # seconds
+    scale_out_cooldown = "60"  # seconds
   }
+
   depends_on = [aws_appautoscaling_target.spot_fleet_target]
 
 }
 
-resource "aws_cloudwatch_metric_alarm" "service_cpu_scale_down" {
-  alarm_name          = "ServiceCPUScaleDown"
-  comparison_operator = "LessThanOrEqualToThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/ECS"
-  period              = "60"
-  statistic           = "Average"
-  threshold           = "80"
+# resource "aws_cloudwatch_metric_alarm" "service_cpu_scale_down" {
+#   alarm_name          = "ServiceCPUScaleDown"
+#   comparison_operator = "LessThanOrEqualToThreshold"
+#   evaluation_periods  = "2"
+#   metric_name         = "CPUUtilization"
+#   namespace           = "AWS/ECS"
+#   period              = "60"
+#   statistic           = "Average"
+#   threshold           = "80"
 
-  dimensions = {
-    ClusterName = aws_ecs_cluster.main.name
-    # ServiceName = "my-service-name"
-  }
+#   dimensions = {
+#     ClusterName = aws_ecs_cluster.main.name
+#   }
 
-  alarm_description = "Monitors CPU Utilization for ${var.service_name}"
-  alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscaling.arn]
-}
+#   alarm_description = "Monitors CPU Utilization for ${var.service_name}"
+#   alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscaling.arn]
+# }
+
+# resource "aws_cloudwatch_metric_alarm" "service_cpu_scale_up" {
+#   alarm_name          = "ServiceCPUScaleUp"
+#   comparison_operator = "GreaterThanOrEqualToThreshold"
+#   evaluation_periods  = "2"
+#   metric_name         = "CPUUtilization"
+#   namespace           = "AWS/ECS"
+#   period              = "60"
+#   statistic           = "Average"
+#   threshold           = "80"
+
+#   dimensions = {
+#     ClusterName = aws_ecs_cluster.main.name
+#   }
+
+#   alarm_description = "Monitors CPU Utilization for ${var.service_name}"
+#   alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscaling.arn]
+# }
 
 resource "random_shuffle" "subnets" {
   input        = data.terraform_remote_state.vpc.outputs.private_subnets
