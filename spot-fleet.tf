@@ -16,20 +16,6 @@ data "aws_ami" "latest_ecs" {
   }
 }
 
-resource "random_shuffle" "subnets" {
-  input        = data.terraform_remote_state.vpc.outputs.private_subnets
-  result_count = 1
-}
-
-resource "random_shuffle" "subnets2" {
-  input        = data.terraform_remote_state.vpc.outputs.private_subnets
-  result_count = 1
-}
-
-output "shuffle" {
-  value = random_shuffle.subnets.result[0]
-}
-
 ### Spot Fleet Request ###
 resource "aws_spot_fleet_request" "main" {
   iam_fleet_role                      = aws_iam_role.fleet.arn
@@ -51,10 +37,9 @@ resource "aws_spot_fleet_request" "main" {
     for_each = var.instance_types
 
     content {
-      ami           = data.aws_ami.latest_ecs.id
-      instance_type = launch_specification.value
-      subnet_id     = random_shuffle.subnets.result[0]
-      # subnet_id              = data.terraform_remote_state.vpc.outputs.private_subnets[0]
+      ami                    = data.aws_ami.latest_ecs.id
+      instance_type          = launch_specification.value
+      subnet_id              = data.terraform_remote_state.vpc.outputs.private_subnets[0] # subnet-a
       vpc_security_group_ids = [aws_security_group.ecs_instance.id]
       iam_instance_profile   = aws_iam_instance_profile.ecs.name
       key_name               = var.key_name
@@ -76,6 +61,37 @@ resource "aws_spot_fleet_request" "main" {
       user_data = templatefile("templates/user_data.sh", { cluster_name = aws_ecs_cluster.main.name })
     }
   }
+
+  # duplicated since TF cant handle mutiple subnet ids in the same launch spec
+  dynamic "launch_specification" {
+    for_each = var.instance_types
+
+    content {
+      ami                    = data.aws_ami.latest_ecs.id
+      instance_type          = launch_specification.value
+      subnet_id              = data.terraform_remote_state.vpc.outputs.private_subnets[1] # subnet-b
+      vpc_security_group_ids = [aws_security_group.ecs_instance.id]
+      iam_instance_profile   = aws_iam_instance_profile.ecs.name
+      key_name               = var.key_name
+      tags                   = merge(local.tags, { Name = var.service_name })
+
+      root_block_device {
+        volume_type = "gp2"
+        volume_size = var.root_volume_size
+      }
+
+      ebs_block_device {
+        # docker
+        device_name = "/dev/xvdcz"
+        volume_type = "gp2"
+        volume_size = var.docker_volume_size
+      }
+
+      # user data adds the spot instances to the ecs cluster
+      user_data = templatefile("templates/user_data.sh", { cluster_name = aws_ecs_cluster.main.name })
+    }
+  }
+
 }
 
 ### Security ###
