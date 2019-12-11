@@ -16,129 +16,6 @@ data "aws_ami" "latest_ecs" {
   }
 }
 
-resource "aws_appautoscaling_target" "spot_fleet_target" {
-  min_capacity = var.asg_min_capacity
-  max_capacity = var.asg_max_capacity
-  resource_id  = "spot-fleet-request/${aws_spot_fleet_request.main.id}"
-  # role_arn           = var.ecs_iam_role
-  scalable_dimension = "ec2:spot-fleet-request:TargetCapacity"
-  service_namespace  = "ec2"
-}
-
-resource "aws_appautoscaling_policy" "ecs_cluster_autoscale_out" {
-  name               = "${var.service_name}-autoscale-out"
-  policy_type        = "StepScaling" # "StepScaling" #  "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.spot_fleet_target.resource_id
-  scalable_dimension = aws_appautoscaling_target.spot_fleet_target.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.spot_fleet_target.service_namespace
-
-
-  step_scaling_policy_configuration {
-    adjustment_type         = "ChangeInCapacity"
-    cooldown                = 60
-    metric_aggregation_type = "Average"
-
-    # step_adjustment {
-    #   // scale down
-    #   metric_interval_lower_bound = 1.0
-    #   metric_interval_upper_bound = 2.0
-    #   scaling_adjustment          = -1
-    # }
-
-    step_adjustment {
-      // scale up
-      metric_interval_lower_bound = 1.0
-      # metric_interval_upper_bound = 3.0
-      scaling_adjustment = 1
-    }
-  }
-
-
-  # target_tracking_scaling_policy_configuration {
-  #   customized_metric_specification {
-  #     namespace   = "AWS/ECS"
-  #     metric_name = "CPUUtilization"
-  #     statistic   = "Average"
-  #     unit        = "Percent"
-
-  #     dimensions {
-  #       name  = "ClusterName"
-  #       value = aws_ecs_cluster.main.name
-  #     }
-
-  #   }
-
-  #   target_value       = "90"
-  #   scale_in_cooldown  = "300" # seconds
-  #   scale_out_cooldown = "60"  # seconds
-  # }
-
-  depends_on = [aws_appautoscaling_target.spot_fleet_target]
-
-}
-
-resource "aws_appautoscaling_policy" "ecs_cluster_autoscale_in" {
-  name               = "${var.service_name}-autoscale-in"
-  policy_type        = "StepScaling" # "StepScaling" #  "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.spot_fleet_target.resource_id
-  scalable_dimension = aws_appautoscaling_target.spot_fleet_target.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.spot_fleet_target.service_namespace
-
-
-  step_scaling_policy_configuration {
-    adjustment_type         = "ChangeInCapacity"
-    cooldown                = 60
-    metric_aggregation_type = "Average"
-
-    step_adjustment {
-      // scale down
-      metric_interval_lower_bound = 1.0
-      # metric_interval_upper_bound = 2.0
-      scaling_adjustment = -1
-    }
-
-  }
-
-  depends_on = [aws_appautoscaling_target.spot_fleet_target]
-
-}
-
-resource "aws_cloudwatch_metric_alarm" "cpu_util_low" {
-  alarm_name          = "${var.service_name}-cpu-utilization-low"
-  comparison_operator = "LessThanOrEqualToThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/ECS"
-  period              = "300"
-  statistic           = "Average"
-  threshold           = "90"
-
-  dimensions = {
-    ClusterName = aws_ecs_cluster.main.name
-  }
-
-  alarm_description = "Monitors CPU Utilization for ${var.service_name}"
-  alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscale_in.arn]
-}
-
-resource "aws_cloudwatch_metric_alarm" "cpu_util_high" {
-  alarm_name          = "${var.service_name}-cpu-utilization-high"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/ECS"
-  period              = "300"
-  statistic           = "Average"
-  threshold           = "90"
-
-  dimensions = {
-    ClusterName = aws_ecs_cluster.main.name
-  }
-
-  alarm_description = "Monitors CPU Utilization for ${var.service_name}"
-  alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscale_out.arn]
-}
-
 resource "random_shuffle" "subnets" {
   input        = data.terraform_remote_state.vpc.outputs.private_subnets
   result_count = 1
@@ -190,6 +67,15 @@ resource "aws_spot_fleet_request" "main" {
         volume_size = var.docker_volume_size
       }
 
+      # dynamic "tag" {
+      #   for_each = merge(local.tags, { Name = var.service_name })
+
+      #   key                 = tag.key
+      #   value               = tag.value
+      #   propagate_at_launch = true
+
+      # }
+
       # user data adds the spot instances to the ecs cluster
       user_data = templatefile("templates/user_data.sh", { cluster_name = aws_ecs_cluster.main.name })
     }
@@ -220,15 +106,15 @@ resource "aws_iam_role" "fleet" {
   tags               = local.tags
 }
 
-data "aws_iam_policy_document" "describe_ec2" {
+# data "aws_iam_policy_document" "describe_ec2" {
 
-  statement {
-    sid       = ""
-    effect    = "Allow"
-    actions   = ["ec2.Describe*"]
-    resources = ["*"]
-  }
-}
+#   statement {
+#     sid       = ""
+#     effect    = "Allow"
+#     actions   = ["ec2.Describe*"]
+#     resources = ["*"]
+#   }
+# }
 
 
 resource "aws_iam_policy" "fleet" {
@@ -240,7 +126,11 @@ resource "aws_iam_policy" "fleet" {
   "Statement": [
     {
       "Action": [
-        "ec2:Describe*"
+        "ec2:Describe*",
+        "ec2:RequestSpotInstances",
+        "ec2:TerminateInstances",
+        "ec2:DescribeInstanceStatus",
+        "ec2:CreateTags"
       ],
       "Effect": "Allow",
       "Resource": "*"
