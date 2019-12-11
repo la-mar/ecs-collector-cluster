@@ -38,18 +38,6 @@ data "terraform_remote_state" "vpc" {
   }
 }
 
-# Load shared ecs cluster
-data "terraform_remote_state" "ecs_cluster" {
-  backend = "remote"
-
-  config = {
-    organization = "deo"
-    workspaces = {
-      name = "ecs-collector-cluster-${replace(var.environment, "stage", "dev")}" # remaps stage to use dev network
-    }
-  }
-}
-
 
 # Get current account id that terraform is running under
 data "aws_caller_identity" "current" {
