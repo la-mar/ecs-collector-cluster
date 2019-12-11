@@ -25,6 +25,10 @@ output "shuffle" {
   value = random_shuffle.subnets.result[0]
 }
 
+output "shuffle2" {
+  value = random_shuffle.subnets.result[0]
+}
+
 ### Spot Fleet Request ###
 resource "aws_spot_fleet_request" "main" {
   iam_fleet_role                      = aws_iam_role.fleet.arn
