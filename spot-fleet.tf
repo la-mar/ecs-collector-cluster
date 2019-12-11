@@ -30,10 +30,6 @@ output "shuffle" {
   value = random_shuffle.subnets.result[0]
 }
 
-output "shuffle2" {
-  value = random_shuffle.subnets.result[0]
-}
-
 ### Spot Fleet Request ###
 resource "aws_spot_fleet_request" "main" {
   iam_fleet_role                      = aws_iam_role.fleet.arn
@@ -57,8 +53,8 @@ resource "aws_spot_fleet_request" "main" {
     content {
       ami           = data.aws_ami.latest_ecs.id
       instance_type = launch_specification.value
-      # subnet_id              = random_shuffle.subnets.result
-      subnet_id              = data.terraform_remote_state.vpc.outputs.private_subnets[0]
+      subnet_id     = random_shuffle.subnets.result[0]
+      # subnet_id              = data.terraform_remote_state.vpc.outputs.private_subnets[0]
       vpc_security_group_ids = [aws_security_group.ecs_instance.id]
       iam_instance_profile   = aws_iam_instance_profile.ecs.name
       key_name               = var.key_name
