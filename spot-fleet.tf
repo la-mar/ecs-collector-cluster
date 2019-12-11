@@ -22,7 +22,7 @@ resource "random_shuffle" "subnets" {
 }
 
 output "shuffle" {
-  value = random_shuffle.subnets.result
+  value = random_shuffle.subnets.result[0]
 }
 
 ### Spot Fleet Request ###
@@ -66,15 +66,6 @@ resource "aws_spot_fleet_request" "main" {
         volume_type = "gp2"
         volume_size = var.docker_volume_size
       }
-
-      # dynamic "tag" {
-      #   for_each = merge(local.tags, { Name = var.service_name })
-
-      #   key                 = tag.key
-      #   value               = tag.value
-      #   propagate_at_launch = true
-
-      # }
 
       # user data adds the spot instances to the ecs cluster
       user_data = templatefile("templates/user_data.sh", { cluster_name = aws_ecs_cluster.main.name })
