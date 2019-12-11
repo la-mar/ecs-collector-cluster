@@ -27,23 +27,11 @@ resource "aws_appautoscaling_target" "spot_fleet_target" {
 
 resource "aws_appautoscaling_policy" "ecs_cluster_autoscaling" {
   name               = "${var.service_name}-autoscale"
-  policy_type        = "TargetTrackingScaling" # "StepScaling" #  "TargetTrackingScaling"
+  policy_type        = "StepScaling" # "StepScaling" #  "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.spot_fleet_target.resource_id
   scalable_dimension = aws_appautoscaling_target.spot_fleet_target.scalable_dimension
   service_namespace  = aws_appautoscaling_target.spot_fleet_target.service_namespace
 
-  customized_metric_specification {
-    namespace   = "AWS/ECS"
-    metric_name = "CPUUtilization"
-    statistic   = "Average"
-    unit        = "Percent"
-
-    dimensions {
-      name  = "ClusterName"
-      value = aws_ecs_cluster.main.name
-    }
-
-  }
 
   step_scaling_policy_configuration {
     adjustment_type         = "ChangeInCapacity"
