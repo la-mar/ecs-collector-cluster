@@ -75,7 +75,7 @@ resource "aws_cloudwatch_metric_alarm" "service_cpu_scale_down" {
 }
 
 resource "random_shuffle" "subnets" {
-  input        = data.terraform_remote_state.vpc.outputs.private_subnets[*]
+  input        = data.terraform_remote_state.vpc.outputs.private_subnets
   result_count = 1
 }
 
@@ -102,8 +102,9 @@ resource "aws_spot_fleet_request" "main" {
     for_each = var.instance_types
 
     content {
-      ami                    = data.aws_ami.latest_ecs.id
-      instance_type          = launch_specification.value
+      ami           = data.aws_ami.latest_ecs.id
+      instance_type = launch_specification.value
+      # subnet_id              = random_shuffle.subnets.result
       subnet_id              = random_shuffle.subnets.result
       vpc_security_group_ids = [aws_security_group.ecs_instance.id]
       iam_instance_profile   = aws_iam_instance_profile.ecs.name
