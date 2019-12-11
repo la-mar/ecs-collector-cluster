@@ -97,27 +97,21 @@ resource "aws_appautoscaling_policy" "ecs_cluster_autoscale_in" {
       scaling_adjustment = -1
     }
 
-    # step_adjustment {
-    #   // scale up
-    #   metric_interval_lower_bound = 2.0
-    #   # metric_interval_upper_bound = 3.0
-    #   scaling_adjustment = 1
-    # }
   }
 
   depends_on = [aws_appautoscaling_target.spot_fleet_target]
 
 }
 
-resource "aws_cloudwatch_metric_alarm" "service_cpu_scale_down" {
-  alarm_name          = "ServiceCPUScaleDown"
+resource "aws_cloudwatch_metric_alarm" "cpu_util_low" {
+  alarm_name          = "${var.service_name}-cpu-utilization-low"
   comparison_operator = "LessThanOrEqualToThreshold"
   evaluation_periods  = "2"
   metric_name         = "CPUUtilization"
   namespace           = "AWS/ECS"
-  period              = "60"
+  period              = "300"
   statistic           = "Average"
-  threshold           = "80"
+  threshold           = "90"
 
   dimensions = {
     ClusterName = aws_ecs_cluster.main.name
@@ -127,15 +121,15 @@ resource "aws_cloudwatch_metric_alarm" "service_cpu_scale_down" {
   alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscale_in.arn]
 }
 
-resource "aws_cloudwatch_metric_alarm" "service_cpu_scale_up" {
-  alarm_name          = "ServiceCPUScaleUp"
+resource "aws_cloudwatch_metric_alarm" "cpu_util_high" {
+  alarm_name          = "${var.service_name}-cpu-utilization-high"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "2"
   metric_name         = "CPUUtilization"
   namespace           = "AWS/ECS"
-  period              = "60"
+  period              = "300"
   statistic           = "Average"
-  threshold           = "80"
+  threshold           = "90"
 
   dimensions = {
     ClusterName = aws_ecs_cluster.main.name
@@ -148,6 +142,10 @@ resource "aws_cloudwatch_metric_alarm" "service_cpu_scale_up" {
 resource "random_shuffle" "subnets" {
   input        = data.terraform_remote_state.vpc.outputs.private_subnets
   result_count = 1
+}
+
+output "shuffle" {
+  value = random_shuffle.subnets.result
 }
 
 ### Spot Fleet Request ###
@@ -166,8 +164,6 @@ resource "aws_spot_fleet_request" "main" {
   }
 
   depends_on = [aws_iam_role.fleet, aws_iam_role_policy_attachment.fleet]
-
-
 
   dynamic "launch_specification" {
     for_each = var.instance_types
