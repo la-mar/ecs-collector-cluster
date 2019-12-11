@@ -25,9 +25,9 @@ resource "aws_appautoscaling_target" "spot_fleet_target" {
   service_namespace  = "ec2"
 }
 
-resource "aws_appautoscaling_policy" "ecs_policy" {
+resource "aws_appautoscaling_policy" "ecs_cluster_autoscaling" {
   name               = "${var.service_name}-autoscale"
-  policy_type        = "StepScaling"
+  policy_type        = "StepScaling" #  "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.spot_fleet_target.resource_id
   scalable_dimension = aws_appautoscaling_target.spot_fleet_target.scalable_dimension
   service_namespace  = aws_appautoscaling_target.spot_fleet_target.service_namespace
@@ -49,6 +49,27 @@ resource "aws_appautoscaling_policy" "ecs_policy" {
       scaling_adjustment          = 1
     }
   }
+  depends_on = [aws_appautoscaling_target.spot_fleet_target]
+
+}
+
+resource "aws_cloudwatch_metric_alarm" "service_cpu_scale_down" {
+  alarm_name          = "ServiceCPUScaleDown"
+  comparison_operator = "LessThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = "80"
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.main.name
+    # ServiceName = "my-service-name"
+  }
+
+  alarm_description = "Monitors CPU Utilization for ${var.service_name}"
+  alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscaling.arn]
 }
 
 
