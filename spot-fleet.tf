@@ -25,8 +25,8 @@ resource "aws_appautoscaling_target" "spot_fleet_target" {
   service_namespace  = "ec2"
 }
 
-resource "aws_appautoscaling_policy" "ecs_cluster_autoscaling" {
-  name               = "${var.service_name}-autoscale"
+resource "aws_appautoscaling_policy" "ecs_cluster_autoscale_out" {
+  name               = "${var.service_name}-autoscale-out"
   policy_type        = "StepScaling" # "StepScaling" #  "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.spot_fleet_target.resource_id
   scalable_dimension = aws_appautoscaling_target.spot_fleet_target.scalable_dimension
@@ -38,13 +38,12 @@ resource "aws_appautoscaling_policy" "ecs_cluster_autoscaling" {
     cooldown                = 60
     metric_aggregation_type = "Average"
 
-
-    step_adjustment {
-      // scale down
-      metric_interval_lower_bound = 1.0
-      metric_interval_upper_bound = 2.0
-      scaling_adjustment          = -1
-    }
+    # step_adjustment {
+    #   // scale down
+    #   metric_interval_lower_bound = 1.0
+    #   metric_interval_upper_bound = 2.0
+    #   scaling_adjustment          = -1
+    # }
 
     step_adjustment {
       // scale up
@@ -78,41 +77,73 @@ resource "aws_appautoscaling_policy" "ecs_cluster_autoscaling" {
 
 }
 
-# resource "aws_cloudwatch_metric_alarm" "service_cpu_scale_down" {
-#   alarm_name          = "ServiceCPUScaleDown"
-#   comparison_operator = "LessThanOrEqualToThreshold"
-#   evaluation_periods  = "2"
-#   metric_name         = "CPUUtilization"
-#   namespace           = "AWS/ECS"
-#   period              = "60"
-#   statistic           = "Average"
-#   threshold           = "80"
+resource "aws_appautoscaling_policy" "ecs_cluster_autoscale_in" {
+  name               = "${var.service_name}-autoscale-in"
+  policy_type        = "StepScaling" # "StepScaling" #  "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.spot_fleet_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.spot_fleet_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.spot_fleet_target.service_namespace
 
-#   dimensions = {
-#     ClusterName = aws_ecs_cluster.main.name
-#   }
 
-#   alarm_description = "Monitors CPU Utilization for ${var.service_name}"
-#   alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscaling.arn]
-# }
+  step_scaling_policy_configuration {
+    adjustment_type         = "ChangeInCapacity"
+    cooldown                = 60
+    metric_aggregation_type = "Average"
 
-# resource "aws_cloudwatch_metric_alarm" "service_cpu_scale_up" {
-#   alarm_name          = "ServiceCPUScaleUp"
-#   comparison_operator = "GreaterThanOrEqualToThreshold"
-#   evaluation_periods  = "2"
-#   metric_name         = "CPUUtilization"
-#   namespace           = "AWS/ECS"
-#   period              = "60"
-#   statistic           = "Average"
-#   threshold           = "80"
+    step_adjustment {
+      // scale down
+      metric_interval_lower_bound = 1.0
+      metric_interval_upper_bound = 2.0
+      scaling_adjustment          = -1
+    }
 
-#   dimensions = {
-#     ClusterName = aws_ecs_cluster.main.name
-#   }
+    # step_adjustment {
+    #   // scale up
+    #   metric_interval_lower_bound = 2.0
+    #   # metric_interval_upper_bound = 3.0
+    #   scaling_adjustment = 1
+    # }
+  }
 
-#   alarm_description = "Monitors CPU Utilization for ${var.service_name}"
-#   alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscaling.arn]
-# }
+  depends_on = [aws_appautoscaling_target.spot_fleet_target]
+
+}
+
+resource "aws_cloudwatch_metric_alarm" "service_cpu_scale_down" {
+  alarm_name          = "ServiceCPUScaleDown"
+  comparison_operator = "LessThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = "80"
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.main.name
+  }
+
+  alarm_description = "Monitors CPU Utilization for ${var.service_name}"
+  alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscale_in.arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "service_cpu_scale_up" {
+  alarm_name          = "ServiceCPUScaleUp"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = "80"
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.main.name
+  }
+
+  alarm_description = "Monitors CPU Utilization for ${var.service_name}"
+  alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscale_out.arn]
+}
 
 resource "random_shuffle" "subnets" {
   input        = data.terraform_remote_state.vpc.outputs.private_subnets
