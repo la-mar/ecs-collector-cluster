@@ -38,15 +38,17 @@ resource "aws_appautoscaling_policy" "ecs_cluster_autoscaling" {
     metric_aggregation_type = "Average"
 
     step_adjustment {
+      // scale down
       metric_interval_lower_bound = 1.0
       metric_interval_upper_bound = 2.0
       scaling_adjustment          = -1
     }
 
     step_adjustment {
+      // scale up
       metric_interval_lower_bound = 2.0
-      metric_interval_upper_bound = 3.0
-      scaling_adjustment          = 1
+      # metric_interval_upper_bound = 3.0
+      scaling_adjustment = 1
     }
   }
   depends_on = [aws_appautoscaling_target.spot_fleet_target]
