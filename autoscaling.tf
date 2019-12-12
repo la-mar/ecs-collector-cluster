@@ -105,31 +105,31 @@ resource "aws_cloudwatch_metric_alarm" "cpu_util_low" {
 
 }
 
-resource "aws_cloudwatch_metric_alarm" "cpu_res_high" {
-  alarm_name          = "${var.service_name}-cpu-reservation-high"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUReservation"
-  namespace           = "AWS/ECS"
-  period              = "300"
-  statistic           = "Maximum"
-  threshold           = "90"
+# resource "aws_cloudwatch_metric_alarm" "cpu_res_high" {
+#   alarm_name          = "${var.service_name}-cpu-reservation-high"
+#   comparison_operator = "GreaterThanOrEqualToThreshold"
+#   evaluation_periods  = "2"
+#   metric_name         = "CPUReservation"
+#   namespace           = "AWS/ECS"
+#   period              = "300"
+#   statistic           = "Maximum"
+#   threshold           = "90"
 
-  dimensions = {
-    ClusterName = aws_ecs_cluster.main.name
-  }
+#   dimensions = {
+#     ClusterName = aws_ecs_cluster.main.name
+#   }
 
-  alarm_description = "Scale up if the cpu reservation is above 90% for 10 minutes"
-  alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscale_out.arn]
+#   alarm_description = "Scale up if the cpu reservation is above 90% for 10 minutes"
+#   alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscale_out.arn]
 
-  lifecycle {
-    create_before_destroy = true
-  }
+#   lifecycle {
+#     create_before_destroy = true
+#   }
 
-  # This is required to make cloudwatch alarms creation sequential, AWS doesn't
-  # support modifying alarms concurrently.
-  depends_on = [aws_cloudwatch_metric_alarm.cpu_util_high]
-}
+#   # This is required to make cloudwatch alarms creation sequential, AWS doesn't
+#   # support modifying alarms concurrently.
+#   depends_on = [aws_cloudwatch_metric_alarm.cpu_util_high]
+# }
 
 # resource "aws_cloudwatch_metric_alarm" "cpu_res_low" {
 #   alarm_name          = "${var.service_name}-cpu-reservation-low"
