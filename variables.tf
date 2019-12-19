@@ -25,7 +25,7 @@ variable "key_name" {
 
 variable "root_volume_size" {
   description = "Root volume size"
-  default     = 8
+  default     = 50
 }
 
 variable "docker_volume_size" {
@@ -46,6 +46,12 @@ variable "asg_max_capacity" {
 variable "desired_capacity" {
   default     = 2
   description = "The desired capacity of the cluster"
+}
+
+variable "ami_arch" {
+  default     = "x86_64"
+  type        = string
+  description = "Architecture of the ECS optimized AMI (x86_64 or arm64)"
 }
 
 

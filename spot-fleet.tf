@@ -7,13 +7,19 @@ data "aws_ami" "latest_ecs" {
 
   filter {
     name   = "name"
-    values = ["*amazon-ecs-optimized"]
+    values = ["amzn2-ami*"]
   }
 
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
   }
+
+  filter {
+    name   = "architecture"
+    values = [var.ami_arch]
+  }
+
 }
 
 ### Spot Fleet Request ###
