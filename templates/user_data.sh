@@ -1,6 +1,6 @@
 #cloud-boothook
 #!/bin/bash
-/root/.deploy.sh
+# /root/.deploy.sh
 
 # ECS_AVAILABLE_LOGGING_DRIVERS=["json-file"]
 
@@ -14,7 +14,7 @@ ECS_CLUSTER=${cluster_name}
 ECS_UPDATES_ENABLED=true
 EOF
 
-cloud-init-per once docker_options sed -i '/^OPTIONS/s/"$/ --storage-opt dm.basesize=40G"/' /etc/sysconfig/docker
+# cloud-init-per once docker_options sed -i '/^OPTIONS/s/"$/ --storage-opt dm.basesize=40G"/' /etc/sysconfig/docker
 
 # echo 'OPTIONS="$${OPTIONS} --storage-opt dm.basesize=40G"' | tee /etc/sysconfig/docker
 
@@ -121,8 +121,8 @@ cloud-init-per once docker_options sed -i '/^OPTIONS/s/"$/ --storage-opt dm.base
 
 # start everything
 # chmod +x /usr/local/bin/bootstrap-awslogs.sh
-systemctl daemon-reload
+# systemctl daemon-reload
 # systemctl enable bootstrap-awslogs.service
 # systemctl enable awslogsd.service
 # systemctl start awslogsd.service --no-block
-ecs start
+# ecs start
