@@ -135,13 +135,13 @@ resource "aws_cloudwatch_metric_alarm" "cpu_res_low" {
   namespace           = "AWS/ECS"
   period              = "300"
   statistic           = "Maximum"
-  threshold           = "10"
+  threshold           = "70"
 
   dimensions = {
     ClusterName = aws_ecs_cluster.main.name
   }
 
-  alarm_description = "Scale down if the cpu reservation is below 10% for 10 minutes"
+  alarm_description = "Scale down if the cpu reservation is below 70% for 10 minutes"
   alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscale_in.arn]
 
   lifecycle {
@@ -187,13 +187,13 @@ resource "aws_cloudwatch_metric_alarm" "memory_res_low" {
   namespace           = "AWS/ECS"
   period              = "300"
   statistic           = "Maximum"
-  threshold           = "10"
+  threshold           = "70"
 
   dimensions = {
     ClusterName = aws_ecs_cluster.main.name
   }
 
-  alarm_description = "Scale down if the memory reservation is below 10% for 10 minutes"
+  alarm_description = "Scale down if the memory reservation is below 70% for 10 minutes"
   alarm_actions     = [aws_appautoscaling_policy.ecs_cluster_autoscale_in.arn]
 
   lifecycle {
