@@ -21,7 +21,7 @@ resource "aws_appautoscaling_policy" "ecs_cluster_autoscale_out" {
 
     step_adjustment {
       // scale up
-      metric_interval_lower_bound = 1.0
+      metric_interval_lower_bound = 0
       scaling_adjustment          = 1
     }
   }
@@ -45,7 +45,7 @@ resource "aws_appautoscaling_policy" "ecs_cluster_autoscale_in" {
 
     step_adjustment {
       // scale down
-      metric_interval_lower_bound = 1.0
+      metric_interval_lower_bound = 0
       scaling_adjustment          = -1
     }
   }
