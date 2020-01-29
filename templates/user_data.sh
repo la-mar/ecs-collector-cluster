@@ -12,6 +12,7 @@ ECS_ENABLE_SPOT_INSTANCE_DRAINING=true
 ECS_LOGLEVEL=info
 ECS_CLUSTER=${cluster_name}
 ECS_UPDATES_ENABLED=true
+ECS_APPARMOR_CAPABLE=true
 EOF
 
 # cloud-init-per once docker_options sed -i '/^OPTIONS/s/"$/ --storage-opt dm.basesize=40G"/' /etc/sysconfig/docker
