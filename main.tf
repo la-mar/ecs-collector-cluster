@@ -19,7 +19,7 @@ locals {
 
   full_service_name = "${var.service_name}-${var.environment}"
   tags = {
-    environment  = var.environment
+    environment  = "spot"
     terraform    = true
     domain       = var.domain
     service_name = var.service_name
