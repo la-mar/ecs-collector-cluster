@@ -50,7 +50,7 @@ resource "aws_spot_fleet_request" "main" {
       iam_instance_profile   = aws_iam_instance_profile.ecs.name
       key_name               = var.key_name
       tags                   = {
-                                environment  = var.environment
+                                environment  = "spot"
                                 terraform    = true
                                 domain       = var.domain
                                 service_name = var.service_name
@@ -86,11 +86,11 @@ resource "aws_spot_fleet_request" "main" {
       iam_instance_profile   = aws_iam_instance_profile.ecs.name
       key_name               = var.key_name
       tags                   = {
-                                environment  = var.environment
+                                environment  = "spot"
                                 terraform    = true
                                 domain       = var.domain
                                 service_name = var.service_name
-                                Name - var.service_name
+                                Name = var.service_name
                               }
 
       root_block_device {
