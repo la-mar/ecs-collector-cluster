@@ -1,11 +1,11 @@
 locals {
   ecs_tags = {
-              environment  = "spot"
-              terraform    = true
-              domain       = var.domain
-              service_name = var.service_name
-              Name - var.service_name
-            }
+    environment  = "spot"
+    terraform    = true
+    domain       = var.domain
+    service_name = var.service_name
+    Name         = var.service_name
+  }
 }
 
 # %% ECS Optimized AMI
