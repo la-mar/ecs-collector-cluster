@@ -1,4 +1,12 @@
-
+locals {
+  ecs_tags = {
+              environment  = "spot"
+              terraform    = true
+              domain       = var.domain
+              service_name = var.service_name
+              Name - var.service_name
+            }
+}
 
 # %% ECS Optimized AMI
 data "aws_ami" "latest_ecs" {
@@ -49,13 +57,7 @@ resource "aws_spot_fleet_request" "main" {
       vpc_security_group_ids = [aws_security_group.ecs_instance.id]
       iam_instance_profile   = aws_iam_instance_profile.ecs.name
       key_name               = var.key_name
-      tags                   = {
-                                environment  = "spot"
-                                terraform    = true
-                                domain       = var.domain
-                                service_name = var.service_name
-                                Name - var.service_name
-                              }
+      tags                   = local.ecs_tags
 
       root_block_device {
         volume_type = "gp2"
@@ -85,13 +87,7 @@ resource "aws_spot_fleet_request" "main" {
       vpc_security_group_ids = [aws_security_group.ecs_instance.id]
       iam_instance_profile   = aws_iam_instance_profile.ecs.name
       key_name               = var.key_name
-      tags                   = {
-                                environment  = "spot"
-                                terraform    = true
-                                domain       = var.domain
-                                service_name = var.service_name
-                                Name = var.service_name
-                              }
+      tags                   = local.ecs_tags
 
       root_block_device {
         volume_type = "gp2"
