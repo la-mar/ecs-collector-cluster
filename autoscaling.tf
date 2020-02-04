@@ -62,7 +62,9 @@ resource "aws_appautoscaling_policy" "target_memory_reservation" {
   policy_type = "TargetTrackingScaling"
 
   target_tracking_scaling_policy_configuration {
-    target_value = 70
+    target_value       = 70
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 300
 
     customized_metric_specification {
       dimensions {
@@ -88,7 +90,9 @@ resource "aws_appautoscaling_policy" "target_cpu_reservation" {
   policy_type = "TargetTrackingScaling"
 
   target_tracking_scaling_policy_configuration {
-    target_value = 70
+    target_value       = 70
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 300
 
     customized_metric_specification {
       dimensions {
