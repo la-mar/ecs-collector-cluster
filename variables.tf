@@ -33,17 +33,7 @@ variable "docker_volume_size" {
   default     = 50
 }
 
-variable "asg_min_capacity" {
-  default     = 1
-  description = "Minimum size of the nodes in the cluster"
-}
-
-variable "asg_max_capacity" {
-  default     = 3
-  description = "Maximum size of the nodes in the cluster"
-}
-
-variable "desired_capacity" {
+variable "spot_fleet_target_capacity" {
   default     = 2
   description = "The desired capacity of the cluster"
 }
@@ -52,6 +42,34 @@ variable "ami_arch" {
   default     = "x86_64"
   type        = string
   description = "Architecture of the ECS optimized AMI (x86_64 or arm64)"
+}
+
+variable "autoscaling_min_capacity" {
+  default     = 1
+  description = "Minimum number of nodes in the cluster"
+}
+
+variable "autoscaling_max_capacity" {
+  default     = 3
+  description = "Maximum number of nodes in the cluster"
+}
+
+variable "autoscaling_target_value" {
+  default     = 70
+  type        = number
+  description = "Target value for app autoscaling target tracking policy"
+}
+
+variable "autoscaling_scale_in_cooldown" {
+  default     = 300
+  type        = number
+  description = "Minimum time (in seconds) between cluster instance scale-in events"
+}
+
+variable "autoscaling_scale_out_cooldown" {
+  default     = 300
+  type        = number
+  description = "Minimum time (in seconds) between cluster instance scale-out events"
 }
 
 

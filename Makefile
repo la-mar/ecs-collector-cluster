@@ -14,3 +14,17 @@ tf-account:
 tf-workspaces:
 	http https://app.terraform.io/api/v2/organizations/deo/workspaces "Authorization: Bearer ${TF_TOKEN}" "Content-Type: application/vnd.api+json"
 
+# {
+#   "data": {
+#     "id":"var-yRmifb4PJj7cLkMG",
+#     "attributes": {
+#       "key":"name",
+#       "value":"mars",
+#       "description":"some description",
+#       "category":"terraform",
+#       "hcl": false,
+#       "sensitive": false
+#     },
+#     "type":"vars"
+#   }
+# }

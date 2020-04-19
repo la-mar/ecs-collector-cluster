@@ -1,9 +1,66 @@
+
 resource "aws_appautoscaling_target" "spot_fleet_target" {
-  min_capacity       = var.asg_min_capacity
-  max_capacity       = var.asg_max_capacity
+  min_capacity       = var.autoscaling_min_capacity
+  max_capacity       = var.autoscaling_max_capacity
   resource_id        = "spot-fleet-request/${aws_spot_fleet_request.main.id}"
   scalable_dimension = "ec2:spot-fleet-request:TargetCapacity"
   service_namespace  = "ec2"
+}
+
+resource "aws_appautoscaling_policy" "target_memory_reservation" {
+  name               = "${var.service_name}-memory-reservation"
+  scalable_dimension = "ec2:spot-fleet-request:TargetCapacity"
+  service_namespace  = "ec2"
+  resource_id        = "spot-fleet-request/${aws_spot_fleet_request.main.id}"
+
+  policy_type = "TargetTrackingScaling"
+
+  target_tracking_scaling_policy_configuration {
+    target_value       = var.autoscaling_target_value
+    scale_in_cooldown  = var.autoscaling_scale_in_cooldown
+    scale_out_cooldown = var.autoscaling_scale_out_cooldown
+
+    customized_metric_specification {
+      dimensions {
+        name  = "ClusterName"
+        value = aws_ecs_cluster.main.name
+      }
+
+      metric_name = "MemoryReservation"
+      namespace   = "AWS/ECS"
+      statistic   = "Average"
+    }
+  }
+
+  depends_on = [aws_appautoscaling_target.spot_fleet_target]
+}
+
+resource "aws_appautoscaling_policy" "target_cpu_reservation" {
+  name               = "${var.service_name}-cpu-reservation"
+  scalable_dimension = "ec2:spot-fleet-request:TargetCapacity"
+  service_namespace  = "ec2"
+  resource_id        = "spot-fleet-request/${aws_spot_fleet_request.main.id}"
+
+  policy_type = "TargetTrackingScaling"
+
+  target_tracking_scaling_policy_configuration {
+    target_value       = var.autoscaling_target_value
+    scale_in_cooldown  = var.autoscaling_scale_in_cooldown
+    scale_out_cooldown = var.autoscaling_scale_out_cooldown
+
+    customized_metric_specification {
+      dimensions {
+        name  = "ClusterName"
+        value = aws_ecs_cluster.main.name
+      }
+
+      metric_name = "CPUReservation"
+      namespace   = "AWS/ECS"
+      statistic   = "Average"
+    }
+  }
+
+  depends_on = [aws_appautoscaling_target.spot_fleet_target]
 }
 
 # resource "aws_appautoscaling_policy" "ecs_cluster_autoscale_out" {
@@ -53,61 +110,6 @@ resource "aws_appautoscaling_target" "spot_fleet_target" {
 #   depends_on = [aws_appautoscaling_target.spot_fleet_target]
 # }
 
-resource "aws_appautoscaling_policy" "target_memory_reservation" {
-  name               = "${var.service_name}-memory-reservation"
-  scalable_dimension = "ec2:spot-fleet-request:TargetCapacity"
-  service_namespace  = "ec2"
-  resource_id        = "spot-fleet-request/${aws_spot_fleet_request.main.id}"
-
-  policy_type = "TargetTrackingScaling"
-
-  target_tracking_scaling_policy_configuration {
-    target_value       = 70
-    scale_in_cooldown  = 300
-    scale_out_cooldown = 300
-
-    customized_metric_specification {
-      dimensions {
-        name  = "ClusterName"
-        value = aws_ecs_cluster.main.name
-      }
-
-      metric_name = "MemoryReservation"
-      namespace   = "AWS/ECS"
-      statistic   = "Average"
-    }
-  }
-
-  depends_on = [aws_appautoscaling_target.spot_fleet_target]
-}
-
-resource "aws_appautoscaling_policy" "target_cpu_reservation" {
-  name               = "${var.service_name}-cpu-reservation"
-  scalable_dimension = "ec2:spot-fleet-request:TargetCapacity"
-  service_namespace  = "ec2"
-  resource_id        = "spot-fleet-request/${aws_spot_fleet_request.main.id}"
-
-  policy_type = "TargetTrackingScaling"
-
-  target_tracking_scaling_policy_configuration {
-    target_value       = 70
-    scale_in_cooldown  = 300
-    scale_out_cooldown = 300
-
-    customized_metric_specification {
-      dimensions {
-        name  = "ClusterName"
-        value = aws_ecs_cluster.main.name
-      }
-
-      metric_name = "CPUReservation"
-      namespace   = "AWS/ECS"
-      statistic   = "Average"
-    }
-  }
-
-  depends_on = [aws_appautoscaling_target.spot_fleet_target]
-}
 
 
 # resource "aws_cloudwatch_metric_alarm" "cpu_util_high" {

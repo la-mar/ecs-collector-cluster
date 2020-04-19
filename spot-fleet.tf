@@ -33,7 +33,7 @@ data "aws_ami" "latest_ecs" {
 ### Spot Fleet Request ###
 resource "aws_spot_fleet_request" "main" {
   iam_fleet_role                      = aws_iam_role.fleet.arn
-  target_capacity                     = var.desired_capacity
+  target_capacity                     = var.spot_fleet_target_capacity
   terminate_instances_with_expiration = true
   wait_for_fulfillment                = true
   replace_unhealthy_instances         = true
