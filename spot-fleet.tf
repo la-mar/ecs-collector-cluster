@@ -102,7 +102,7 @@ resource "aws_spot_fleet_request" "main" {
       }
 
       # user data adds the spot instances to the ecs cluster
-      user_data = templatefile("templates/user_data.sh", { cluster_name = aws_ecs_cluster.main.name })
+      user_data = templatefile("templates/user_data.sh", { cluster_name = aws_ecs_cluster.main.name, ecs_reserved_memory = var.ecs_reserved_memory })
     }
   }
 
