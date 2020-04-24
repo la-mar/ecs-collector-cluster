@@ -13,7 +13,7 @@ ECS_LOGLEVEL=info
 ECS_CLUSTER=${cluster_name}
 ECS_UPDATES_ENABLED=true
 ECS_APPARMOR_CAPABLE=true
-ECS_RESERVED_MEMORY=256
+ECS_RESERVED_MEMORY=${ecs_reserved_memory}
 EOF
 
 # cloud-init-per once docker_options sed -i '/^OPTIONS/s/"$/ --storage-opt dm.basesize=40G"/' /etc/sysconfig/docker

@@ -72,6 +72,11 @@ variable "autoscaling_scale_out_cooldown" {
   description = "Minimum time (in seconds) between cluster instance scale-out events"
 }
 
+variable "ecs_reserved_memory" {
+  default     = 512
+  type        = number
+  description = "Amount of memory (in MiB) to reserve for system critical processes on ECS cluster nodes"
+}
 
 
 
