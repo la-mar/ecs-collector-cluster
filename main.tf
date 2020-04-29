@@ -22,7 +22,7 @@ locals {
     environment  = var.environment
     terraform    = true
     domain       = var.domain
-    service_name = var.service_name
+    cluster_name = var.service_name
   }
 }
 

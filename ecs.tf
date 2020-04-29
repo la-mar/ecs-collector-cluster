@@ -25,8 +25,6 @@ resource "aws_ecs_service" "datadog" {
     ignore_changes = [
       desired_count,
       task_definition,
-
-
     ]
   }
 }
@@ -35,8 +33,7 @@ resource "aws_ecs_service" "datadog" {
 
 ### Task Definitions ###
 
-# TODO: Find a way to avoid referencing task definition. This creates a hard to anticipate
-# error where the task definition must exist before the terraform is applied in a new environment
+# TODO: Task definition must be created externally first
 data "aws_ecs_task_definition" "datadog" {
   task_definition = "datadog"
 }
